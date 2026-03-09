@@ -12,8 +12,8 @@ originalx1 = x1
 ### KEY generation; we start with f(x) and g(x); they are calculated from F(x) and G(x) respectively
 ###
 print ('\n++++++++++ KEY GENERATION BEGINS ++++++++++')
-fx_str = '1 + p (x^4 - x^3 + x^2 - x)'
-fx = R(fx_str)
+fx_str = '1 + 3 * (x^4 - x^3 + x^2 - x)' #errors here
+fx = R(fx_str) #errors here
 print ('PRIVATE KEY fx = ', fx_str)
 
 #

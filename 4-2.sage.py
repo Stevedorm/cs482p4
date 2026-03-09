@@ -18,8 +18,8 @@ originalx1 = x1
 ### KEY generation; we start with f(x) and g(x); they are calculated from F(x) and G(x) respectively
 ###
 print ('\n++++++++++ KEY GENERATION BEGINS ++++++++++')
-fx_str = 'x^4 - x^3 + x^2 - x'
-fx = R(fx_str)
+fx_str = '1 + 3 * (x^4 - x^3 + x^2 - x)' #errors here
+fx = R(fx_str) #errors here
 print ('PRIVATE KEY fx = ', fx_str)
 
 #
@@ -87,14 +87,14 @@ print ('\nPublic key (before mods 31; needs to manually mods 31 by you) = ', las
 ### PLAINTEXT
 ###
 print ('\n++++++++++ ENCRYPTION BEGINS ++++++++++')
-mx_str = 'x^15 - x^12 + x^7 - 1'
+mx_str = 'x^13 - x^11 + x^9 - 1'
 mx = R(mx_str)
 print ('Plaintext m(x) = ', mx_str)
 
 #
 # Random polynomial for encryption
 #
-rx_str = 'x^19 + x^10 + x^6 - x^2'
+rx_str = 'x^18 + x^15 + x^7 - x^3'
 rx = R (rx_str)
 print ('Random r(x) = ', rx_str)
 
