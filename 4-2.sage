@@ -74,6 +74,9 @@ lastq, lastrem = hx.quo_rem (originalx1)
 #
 print ('\nPublic key (before mods 31; needs to manually mods 31 by you) = ', lastrem)
 
+while true:
+    if 
+
 ##############################################
 ########### NTRU ENCRYPTION ##################
 ##############################################
