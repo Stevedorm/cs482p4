@@ -1,40 +1,8 @@
-# Ring mod (x^N - 1)
-def poly_from_vec(v):
-    return sum(v[i]*x^i for i in range(len(v))) % (x^N - 1)
-
-def center_lift(poly, q):
-    coeffs = poly.list()
-    lifted = []
-    for c in coeffs:
-        c = c % q
-        if c > q//2:
-            c -= q
-        lifted.append(c)
-    return sum(lifted[i]*x^i for i in range(len(lifted))) % (x^N - 1)
-
-# Find candidate (f,g)
-def find_fg(vectors):
-    for v in vectors:
-        if len(v) != 2*N:
-            continue
-
-        f = v[:N]
-        g = v[N:]
-
-        # heuristic: small coefficients
-        if max(abs(c) for c in f) <= 2 and max(abs(c) for c in g) <= 2:
-            return f, g
-
-    return None, None
-
-
-
-# Parameters (edit these)
 N = 23
 p = 3
 q = 31
 
-# Example: paste your 46-dimensional LLL vectors here
+
 vectors = [
 [3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -3, 0, -3, 0, 0, 3, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 1, 1, 1, 0],
 [0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, -3, 0, -3, 0, 0, 3, -3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1, 1, 0, 0, 0, 0, 1, 1, 1],
@@ -88,47 +56,112 @@ vectors = [
 [0, -1, 2, -2, -1, 0, 0, 3, 0, -3, -4, 1, 1, 3, -1, 0, -2, 0, -3, 1, -3, -2, 0, 1, -2, -1, 1, -1, -1, 0, 1, -1, 1, 2, 0, -2, -1, 1, 1, -1, 1, 1, 1, -2, -2, 4]
 ]
 
-
-# File containing polynomial ciphertext
-ciphertext_file = "23-ntru-example01-ciphertext.txt"
-
-# Read polynomial from file
-with open(ciphertext_file, "r") as f:
-    text = f.read()
-# Ciphertext polynomial already parsed
-with open(ciphertext_file, "r") as f:
-    text = f.read()
-poly_str = text.split("=", 1)[1].strip()
-
 R = ZZ['x']
 x = R.gen()
-c_poly = R(poly_str) % (x^N - 1)  # reduce modulo x^N - 1
 
-# Candidate f, g
+# Build quotient rings properly
+Rq.<xq> = PolynomialRing(GF(q))
+Rp.<xp> = PolynomialRing(GF(p))
+
+def poly_from_vec(v):
+    return sum(v[i]*x^i for i in range(len(v))) % (x^N - 1)
+
+def center_lift(poly, q):
+    coeffs = poly.list()
+    # Pad to length N
+    coeffs += [0] * (N - len(coeffs))
+    lifted = []
+    for c in coeffs:
+        c = ZZ(c) % q
+        if c > q // 2:
+            c -= q
+        lifted.append(c)
+    return sum(lifted[i]*x^i for i in range(N)) % (x^N - 1)
+
+def is_invertible(f_coeffs, Ring, modpoly):
+    try:
+        f_r = Ring(f_coeffs)
+        f_r.inverse_mod(modpoly)
+        return True
+    except:
+        return False
+
+def find_fg(vectors):
+    """
+    Try all vectors as candidate f; look for one invertible mod p and q.
+    g is reconstructed from the second half.
+    """
+    for v in vectors:
+        if len(v) != 2 * N:
+            continue
+        
+        f_vec = list(v[:N])
+        g_vec = list(v[N:])
+        
+        # Check small coefficients (NTRU keys are in {-1,0,1})
+        if max(abs(c) for c in f_vec) > 3:
+            continue
+        if max(abs(c) for c in g_vec) > 3:
+            continue
+        
+        f_coeffs_q = [GF(q)(c) for c in f_vec]
+        f_coeffs_p = [GF(p)(c) for c in f_vec]
+        
+        # Check invertibility in both rings
+        try:
+            fq = Rq(f_coeffs_q)
+            fq.inverse_mod(xq^N - 1)
+        except:
+            continue
+        try:
+            fp = Rp(f_coeffs_p)
+            fp.inverse_mod(xp^N - 1)
+        except:
+            continue
+        
+        print(f"Found valid f: {f_vec}")
+        print(f"Corresponding g: {g_vec}")
+        return f_vec, g_vec
+    
+    return None, None
+
+# Read ciphertext
+ciphertext_file = "23-ntru-example01-ciphertext.txt"
+with open(ciphertext_file, "r") as f:
+    text = f.read()
+
+poly_str = text.split("=", 1)[1].strip()
+c_poly = R(poly_str) % (x^N - 1)
+
+# Find f and g
 f_vec, g_vec = find_fg(vectors)
 if f_vec is None:
-    print("No suitable short vector found.")
+    print("No suitable f found — check your LLL vectors or thresholds.")
     exit()
+
 f = poly_from_vec(f_vec)
 g = poly_from_vec(g_vec)
 
-# Ensure coefficients length N
-f_coeffs = f.list() + [0]*(N - len(f.list()))
-f_q = Rq(f_coeffs)
-f_p = Rp(f_coeffs)
+# Build ring elements
+f_coeffs_q = [GF(q)(ZZ(c)) for c in f.list()] + [GF(q)(0)] * (N - len(f.list()))
+f_coeffs_p = [GF(p)(ZZ(c)) for c in f.list()] + [GF(p)(0)] * (N - len(f.list()))
 
-# Inverses
-try:
-    f_q_inv = f_q.inverse_mod(xq^N - 1)
-    f_p_inv = f_p.inverse_mod(xp^N - 1)
-except:
-    print("f is not invertible mod p or q")
-    exit()
+fq = Rq(f_coeffs_q)
+fp = Rp(f_coeffs_p)
 
-# Decrypt
-a = (f * c_poly) % (x^N - 1)
-a = center_lift(a, q)
-a_mod_p = Rp([ZZ(c) for c in a.list()] + [0]*(N - len(a.list())))
-m = (f_p_inv * a_mod_p) % (xp^N - 1)
+fq_inv = fq.inverse_mod(xq^N - 1)
+fp_inv = fp.inverse_mod(xp^N - 1)
+
+# Step 1: a = f * c mod (x^N - 1), center-lifted mod q
+a_raw = (f * c_poly) % (x^N - 1)
+a = center_lift(a_raw, q)
+
+print("a (center-lifted):", a.list())
+
+# Step 2: reduce a mod p, then multiply by f_p^{-1}
+a_coeffs_p = [GF(p)(ZZ(c)) for c in a.list()] + [GF(p)(0)] * (N - len(a.list()))
+a_p = Rp(a_coeffs_p)
+
+m = (fp_inv * a_p) % (xp^N - 1)
 
 print("Decrypted message coefficients:", m.list())
