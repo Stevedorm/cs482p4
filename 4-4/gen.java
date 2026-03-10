@@ -1,40 +1,15 @@
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
 import net.sf.ntru.encrypt.EncryptionKeyPair;
-import net.sf.ntru.encrypt.EncryptionPrivateKey;
-import net.sf.ntru.encrypt.NtruEncrypt;
 import net.sf.ntru.encrypt.EncryptionParameters;
+import net.sf.ntru.encrypt.NtruEncrypt;
+import net.sf.ntru.encrypt.EncryptionPublicKey;
+import net.sf.ntru.encrypt.EncryptionPrivateKey;
+
 
 public class gen {
-
     private static final NtruEncrypt ntru =
         new NtruEncrypt(EncryptionParameters.APR2011_743_FAST);
-
-    public static byte[] readAllBytes(String filename) throws Exception {
-        File file = new File(filename);
-        byte[] data = new byte[(int) file.length()];
-
-        try (FileInputStream fis = new FileInputStream(file)) {
-            int totalRead = 0;
-            while (totalRead < data.length) {
-                int bytesRead = fis.read(data, totalRead, data.length - totalRead);
-                if (bytesRead == -1) {
-                    break;
-                }
-                totalRead += bytesRead;
-            }
-        }
-
-        return data;
-    }
-
-    public static void writeBytes(String filename, byte[] data) throws Exception {
-        try (FileOutputStream fos = new FileOutputStream(filename)) {
-            fos.write(data);
-        }
-    }
 
     public static String bytesToHex(byte[] data) {
         char[] hexArray = {
@@ -50,34 +25,40 @@ public class gen {
         return sb.toString();
     }
 
+    public static void generateKeyPair(String publicKeyFile, String privateKeyFile) throws Exception {
+        System.out.println("NTRU key pair generation starts...");
+
+        EncryptionKeyPair kp = ntru.generateKeyPair();
+
+        EncryptionPublicKey pub = kp.getPublic();
+        byte[] pubBytes = pub.getEncoded();
+
+        try (FileOutputStream fos = new FileOutputStream(publicKeyFile)) {
+            fos.write(pubBytes);
+        }
+
+        System.out.println("Public key saved to: " + publicKeyFile);
+        System.out.println("Public key length: " + pubBytes.length + " bytes");
+        System.out.println("Public key hex: " + bytesToHex(pubBytes));
+
+        EncryptionPrivateKey priv = kp.getPrivate();
+        byte[] privBytes = priv.getEncoded();
+
+        try (FileOutputStream fos = new FileOutputStream(privateKeyFile)) {
+            fos.write(privBytes);
+        }
+
+        System.out.println("Private key saved to: " + privateKeyFile);
+        System.out.println("Private key length: " + privBytes.length + " bytes");
+        System.out.println("Private key hex: " + bytesToHex(privBytes));
+    }
+
     public static void main(String[] args) {
         try {
-            if (args.length != 3) {
-                System.out.println("Usage: java NtruDecryptFromFile <privatekey.bin> <ciphertext.bin> <outputfile>");
-                return;
-            }
+            String publicKeyFile = "dormadsa-public.bin";
+            String privateKeyFile = "dormadsa-private.bin";
 
-            String privateKeyFile = args[0];
-            String ciphertextFile = args[1];
-            String outputFile = args[2];
-
-            byte[] privateKeyBytes = readAllBytes(privateKeyFile);
-            byte[] ciphertextBytes = readAllBytes(ciphertextFile);
-
-            EncryptionPrivateKey privateKey = new EncryptionPrivateKey(privateKeyBytes);
-
-            // Only the private key is needed for decryption here
-            EncryptionKeyPair kp = new EncryptionKeyPair(privateKey, null);
-
-            byte[] recoveredPlaintext = ntru.decrypt(ciphertextBytes, kp);
-
-            writeBytes(outputFile, recoveredPlaintext);
-
-            System.out.println("Ciphertext hex: " + bytesToHex(ciphertextBytes));
-            System.out.println("Recovered plaintext: " + new String(recoveredPlaintext));
-            System.out.println("Recovered plaintext hex: " + bytesToHex(recoveredPlaintext));
-            System.out.println("Plaintext written to: " + outputFile);
-
+            generateKeyPair(publicKeyFile, privateKeyFile);
         } catch (Exception e) {
             e.printStackTrace();
         }
