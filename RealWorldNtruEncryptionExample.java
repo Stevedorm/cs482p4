@@ -32,25 +32,25 @@ public class RealWorldNtruEncryptionExample {
     NtruEncrypt ntru = new NtruEncrypt(EncryptionParameters.APR2011_743_FAST);
 
     public String convertToString (byte[] data, int startPos) {
-	char[] _hexArray = {'0', '1', '2', '3', '4', '5','6', '7', '8',
-			    '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+		char[] _hexArray = {'0', '1', '2', '3', '4', '5','6', '7', '8',
+					'9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
-	StringBuffer sb = new StringBuffer();
-	for (int i=startPos; i <data.length; i++) {
-		sb.append("" + _hexArray[(data[i] >> 4) & 0x0f] + _hexArray[data[i] & 0x0f]);
-	}
+		StringBuffer sb = new StringBuffer();
+		for (int i=startPos; i <data.length; i++) {
+			sb.append("" + _hexArray[(data[i] >> 4) & 0x0f] + _hexArray[data[i] & 0x0f]);
+		}
 
-	return sb.toString();
+		return sb.toString();
     }
 
     public static byte[] hexStringToByteArray(String s) {
-	int len = s.length();
-	byte[] data = new byte[len / 2];
-	for (int i = 0; i < len; i += 2) {
-		data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
-	}
+		int len = s.length();
+		byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
+		}
 
-	return data;
+		return data;
     }
 
     public void generateKeyPair (String inPublicKeyFilename, String inPrivateKeyFilename) throws Exception {
@@ -59,23 +59,23 @@ public class RealWorldNtruEncryptionExample {
         // create an encryption key pair
         kp = ntru.generateKeyPair();
 
-	//
-	// Save the public key to file inPublicKeyFilename
-	//
-	EncryptionPublicKey euk = kp.getPublic();
-	byte[] ukBytes = euk.getEncoded();
-	System.out.println ("\nByte length of ENCODED public key = " + ukBytes.length);
-	FileOutputStream fos1 = new FileOutputStream (inPublicKeyFilename);
-	fos1.write (ukBytes);
-	fos1.close();
-        System.out.println ("The public key bytes are " + convertToString (ukBytes, 0));
+		//
+		// Save the public key to file inPublicKeyFilename
+		//
+		EncryptionPublicKey euk = kp.getPublic();
+		byte[] ukBytes = euk.getEncoded();
+		System.out.println ("\nByte length of ENCODED public key = " + ukBytes.length);
+		FileOutputStream fos1 = new FileOutputStream (inPublicKeyFilename);
+		fos1.write (ukBytes);
+		fos1.close();
+			System.out.println ("The public key bytes are " + convertToString (ukBytes, 0));
 
-	EncryptionPrivateKey epk = kp.getPrivate();
-	byte[] pkBytes = epk.getEncoded();
-	System.out.println ("\nByte length of ENCODED private key = " + pkBytes.length);
-	FileOutputStream fos2 = new FileOutputStream (inPrivateKeyFilename);
-	fos2.write (pkBytes);
-	fos2.close();
+		EncryptionPrivateKey epk = kp.getPrivate();
+		byte[] pkBytes = epk.getEncoded();
+		System.out.println ("\nByte length of ENCODED private key = " + pkBytes.length);
+		FileOutputStream fos2 = new FileOutputStream (inPrivateKeyFilename);
+		fos2.write (pkBytes);
+		fos2.close();
         System.out.println ("The private key bytes are " + convertToString (pkBytes, 0));
     }
 
@@ -99,24 +99,24 @@ public class RealWorldNtruEncryptionExample {
 
     public void loadKeyPairFromFiles (String inPrivateKeyFilename, String inPublicKeyFilename) throws Exception {
         File file = new File (inPrivateKeyFilename);
-	int size = (int) file.length();
-	// System.out.println ("File size = " + size);
-	FileInputStream fis = new FileInputStream (inPrivateKeyFilename);
-	byte[] privateKeyBytes = new byte[size];
-	fis.read (privateKeyBytes);
-	fis.close ();
+		int size = (int) file.length();
+		// System.out.println ("File size = " + size);
+		FileInputStream fis = new FileInputStream (inPrivateKeyFilename);
+		byte[] privateKeyBytes = new byte[size];
+		fis.read (privateKeyBytes);
+		fis.close ();
 
-        File file2 = new File (inPublicKeyFilename);
-	int size2 = (int) file2.length();
-	// System.out.println ("File size = " + size2);
-	FileInputStream fis2 = new FileInputStream (inPublicKeyFilename);
-	byte[] publicKeyBytes = new byte[size2];
-	fis2.read (publicKeyBytes);
-	fis2.close ();
+			File file2 = new File (inPublicKeyFilename);
+		int size2 = (int) file2.length();
+		// System.out.println ("File size = " + size2);
+		FileInputStream fis2 = new FileInputStream (inPublicKeyFilename);
+		byte[] publicKeyBytes = new byte[size2];
+		fis2.read (publicKeyBytes);
+		fis2.close ();
 
-	EncryptionPrivateKey epk = new EncryptionPrivateKey (privateKeyBytes);
-	EncryptionPublicKey euk = new EncryptionPublicKey (publicKeyBytes);
-	kp = new EncryptionKeyPair (epk, euk);
+		EncryptionPrivateKey epk = new EncryptionPrivateKey (privateKeyBytes);
+		EncryptionPublicKey euk = new EncryptionPublicKey (publicKeyBytes);
+		kp = new EncryptionKeyPair (epk, euk);
     }
 
     public void test () throws Exception {
