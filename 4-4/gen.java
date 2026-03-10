@@ -57,9 +57,9 @@ public class gen {
                 return;
             }
 
-            String privateKeyFile = "dormadsa-private.bin";
-            String ciphertextFile = "dormadsa-ciphertext.bin";
-            String outputFile = "dormadsa-recovered.txt";
+            String privateKeyFile = args[0];
+            String ciphertextFile = args[1];
+            String outputFile = args[2];
 
             byte[] privateKeyBytes = readAllBytes(privateKeyFile);
             byte[] ciphertextBytes = readAllBytes(ciphertextFile);
